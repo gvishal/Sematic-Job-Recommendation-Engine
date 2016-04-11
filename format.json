@@ -1,0 +1,19 @@
+{
+	"id": "unique_id",
+	"name": "name",
+	"email": "email",
+	"phone": "phone",
+	"sections": {
+		"experience": "experience",
+		"education": "education",
+		"achievements": "achievements",
+		"projects": "projects",
+		"interest": "interest",
+		"skills": "skills",
+		"personal": "personal"
+		},
+	"features": {
+
+		},
+	"static_score": 2.3
+}
