@@ -1,5 +1,7 @@
 #!/usr/bin/python
 import sys
+import os
+import json
 
 section_names = {
                 'professional experience':'experience',
@@ -11,6 +13,7 @@ section_names = {
                 'skills':'skills',
                 'technical skills':'skills',
                 'achievements':'achievements',
+                'academic achievements':'achievements',
                 'projects':'projects',
                 'major projects':'projects',
                 'minor projects':'projects',
@@ -25,19 +28,67 @@ section_names = {
                 'personal details':'personal'
                 }
 
-f = open(sys.argv[1],'r')
+dump={}
+field=""
+data=""
 
+path=sys.argv[1]
+
+newdir=path+"/../infoboxes/"
+
+d = os.path.dirname(newdir)
+
+if not os.path.exists(d):
+	os.makedirs(d)
+
+jsonpath=path+"/../jsons/"	
+
+j = os.path.dirname(jsonpath)
+
+if not os.path.exists(j):
+	os.makedirs(j)
 
 # go till first section
 
-print 'Beginning'
-for line in f:
-    section = line.lstrip().rstrip().lower().replace(":","").replace(".","") # remove delimeters
-    #section = section.split('.:(')[0].rstrip()
-    #section = section.replace(".","")
+for file in os.listdir(path):
 
-    if section in section_names.keys():
-        print '========================================'
-        print 'Start of',section_names[section]
-    else:
-        print line[:-1]
+	current=os.path.join(path,file)
+
+	if os.path.isfile(current):
+		f=open(current,'rb')
+
+		w=open(d+"/"+str(file),'wb')
+		
+		first=1
+
+		print 'Writing file: ' + newdir+"/"+str(file)
+
+		for line in f:
+		    section = line.lstrip().rstrip().lower().replace(":","").replace(".","") # remove delimeters
+
+		    if section in section_names.keys():
+	
+			if first: first=0
+
+			else: dump[field]=data; data="";
+
+			w.write("========================================\n")
+			w.write("Start of " + section_names[section]+"\n")
+			field=section_names[section]
+
+		    else:
+			w.write(line[:-1]+"\n")
+			data+=line[:-1]+"\n"
+
+		dump[field]=data		## last section
+
+		print 'Dumping json: ' + newdir+"/"+str(file)+".json\n\n"
+
+		json.dump(dump,open(j+"/"+str(file)+".json",'wb'))
+
+		f.close()
+		w.close()
+		dump.clear()
+
+
+
