@@ -10,13 +10,19 @@ section_names = {
                 'industry experience':'experience',
                 'education':'education',
                 'education background':'education',
+                'academics':'education',
+                'academic record':'education',
+                'academic details':'education',
                 'skills':'skills',
                 'technical skills':'skills',
+                'technologies worked with':'skills',
                 'achievements':'achievements',
                 'academic achievements':'achievements',
+				'scholastic achievements':'achievements',	
                 'projects':'projects',
                 'major projects':'projects',
                 'minor projects':'projects',
+				'other projects':'projects',
                 'project and publications':'projects',
                 'publications':'projects',
                 'areas of interest':'interest',
@@ -25,16 +31,29 @@ section_names = {
                 'academic projects':'projects',
                 'computer skills':'skills',
                 'personal information':'personal',
-                'personal details':'personal'
+                'personal details':'personal',
+				'relevant courses':'courses',
+				'relevant course work':'courses',
+				'relevant courses undertaken':'courses',
+				'selected coursework':'courses',
+				'research oriented work':'research',
+				'publications':'research',
+				'extra curricular':'interests',
+				'extra-curricular':'interests',
+				'interests':'interests',
+				'other activities':'interests',
+				'notable philanthropic projects':'interests',
+				'other achievements':'interests',
+				'miscellaneous':'interests',
+				'technical and personal skills':'skills'
                 }
 
 dump={}
-field=""
 data=""
 
-path=sys.argv[1]
+path = sys.argv[1]
 
-newdir=path+"/../infoboxes/"
+newdir = path + "/../infoboxes/"
 
 d = os.path.dirname(newdir)
 
@@ -60,8 +79,9 @@ for file in os.listdir(path):
 		w=open(d+"/"+str(file),'wb')
 		
 		first=1
+		field=""
 
-		print 'Writing file: ' + newdir+"/"+str(file)
+		print 'Writing file: ' + newdir+str(file)
 
 		for line in f:
 		    section = line.lstrip().rstrip().lower().replace(":","").replace(".","") # remove delimeters
@@ -69,26 +89,25 @@ for file in os.listdir(path):
 		    if section in section_names.keys():
 	
 			if first: first=0
-
-			else: dump[field]=data; data="";
+#			elif section_names[section]==field: continue
+			elif section in dump : continue
+			else: dump[field]=data; data="";	
 
 			w.write("========================================\n")
 			w.write("Start of " + section_names[section]+"\n")
 			field=section_names[section]
 
 		    else:
-			w.write(line[:-1]+"\n")
-			data+=line[:-1]+"\n"
+			w.write(line)
+			data+=line
 
-		dump[field]=data		## last section
+		if field not in dump:
+			dump[field]=data		## last section
 
-		print 'Dumping json: ' + newdir+"/"+str(file)+".json\n\n"
+		print 'Dumping json: ' + newdir+str(file)+".json\n\n"
 
-		json.dump(dump,open(j+"/"+str(file)+".json",'wb'))
+		json.dump(dump, open(j+"/"+str(file)+".json",'wb'))
 
 		f.close()
 		w.close()
 		dump.clear()
-
-
-

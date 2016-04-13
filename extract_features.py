@@ -18,14 +18,14 @@ printable = set(string.printable)
 
 WINDOW_SIZE = 20
 
-def get_time(text, section):
-    output = nlp.annotate(text, properties={
-      'annotators': 'tokenize,ssplit,pos,lemma,ner',
-      'outputFormat': 'json'
-      })
+# def get_time(text, section):
+#     output = nlp.annotate(text, properties={
+#       'annotators': 'tokenize,ssplit,pos,lemma,ner',
+#       'outputFormat': 'json'
+#       })
 
-    get_time_context(output, section)
-    return
+#     get_time_context(output, section)
+#     return
     # print output
     # time_tokens = []
     # for s in output['sentences']:
@@ -35,8 +35,12 @@ def get_time(text, section):
 
     # print time_tokens
 
-def get_time_context(output, section):
+def get_time_context(text, section):
     """Extract all sentences which have any time context"""
+    output = nlp.annotate(text, properties={
+      'annotators': 'tokenize,ssplit,pos,lemma,ner',
+      'outputFormat': 'json'
+      })
     time_contexts = []
 
     json.dump(output, open("./data/sample_ner/test_nlp_" + section + ".json", 'w'))
@@ -79,9 +83,8 @@ def get_time_context(output, section):
             if n:
                 time_contexts[n-1]['aux_content'].append(content)
 
-    print time_contexts
-
-
+    return time_contexts
+    
 def get_time_groups(time_tokens):
     time_groups = []
 
@@ -95,7 +98,7 @@ def main():
 
     for json_file in os.listdir(jsonpath):
         current = os.path.join(jsonpath, json_file)
-        current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201203005_BhavanaGannu.pdf.html.json'
+        # current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201203005_BhavanaGannu.pdf.html.json'
         print current
 
         if not os.path.isfile(current):
@@ -104,23 +107,24 @@ def main():
         fp = open(current, 'rb')
 
         json_content = json.load(fp)
+        time_contexts = []
 
         if 'sections' in json_content.keys():
             for section in json_content['sections']:
                 if section not in ['experience']:
                     continue
-                get_time(json_content['sections'][section])
+                time_contexts = get_time_context(json_content['sections'][section])
 
         for section in json_content:
-            print section
+            # print section
             if section not in ['experience']:
                 continue
             s = json_content[section]
             s = filter(lambda x: x in printable, s)
-            get_time(s, section)
+            time_contexts = get_time_context(s, section)
 
-        break
-
+        json.dump(time_contexts, open("./data/time/" + json_file, 'w'))
+        # break
 
 if __name__ == '__main__':
     main()
