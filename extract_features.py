@@ -4,6 +4,8 @@ import sys
 import os
 import json
 import string
+import datetime
+import re
 
 stopwords = set()   
 with open('stopwords.txt', 'r') as f:
@@ -51,7 +53,7 @@ def get_time_context(text, section):
     for s in output['sentences']:
         time_token_present = False
         ignore = False
-        time_value = []
+        time_value = set()
         content = []
         aux_content = []
 
@@ -60,11 +62,12 @@ def get_time_context(text, section):
                 # print token
                 time_token_present = True
                 if 'normalizedNER' in token:
-                    time_value.append(token['normalizedNER'])
-                time_value.append(token['word'])
+                    time_value.add(token['normalizedNER'])
+                time_value.add(token['word'].lower())
+
             if token['word'] in ['monsoon']:
                 time_token_present = True
-                time_value.append('monsoon')
+                time_value.add('monsoon')
 
         # If sentence has time token then weigh it.
         for token in s['tokens']:
@@ -84,7 +87,144 @@ def get_time_context(text, section):
                 time_contexts[n-1]['aux_content'].append(content)
 
     return time_contexts
-    
+
+def year_month_range(start_date, end_date):
+    '''
+    start_date: datetime.date(2015, 9, 1) or datetime.datetime
+    end_date: datetime.date(2016, 3, 1) or datetime.datetime
+    return: datetime.date list of 201509, 201510, 201511, 201512, 201601, 201602
+    '''
+    start, end = start_date.strftime('%Y%m'), end_date.strftime('%Y%m')
+    assert len(start) == 6 and len(end) == 6
+    start, end = int(start), int(end)
+
+    year_month_list = []
+    while start < end:
+        year, month = divmod(start, 100)
+        if month == 13:
+            start += 88  # 201513 + 88 = 201601
+            continue
+        year_month_list.append(datetime.date(year, month, 1))
+
+        start += 1
+    return year_month_list
+
+def month_str_to_num(string):
+    m = {
+        'jan': 1,
+        'feb': 2,
+        'mar': 3,
+        'apr':4,
+         'may':5,
+         'jun':6,
+         'jul':7,
+         'aug':8,
+         'sep':9,
+         'oct':10,
+         'nov':11,
+         'dec':12
+        }
+    s = string.strip()[:3].lower()
+
+    try:
+        out = m[s]
+        return out
+    except:
+        raise ValueError('Not a month')
+
+DATE_REGEXES = [
+'^(1[0-2]|0[1-9]|\d)(\/|-)(20\d{2}|19\d{2}|0(?!0)\d|[1-9]\d)$',#month-year
+'^(20\d{2}|19\d{2}|0(?!0)\d|[1-9]\d)(\/|-)(1[0-2]|0[1-9]|\d)$'#year-month
+]
+
+MONTH_REGEX = '(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|(nov|dec)(?:ember)?)'
+
+def get_match(regex, text):
+    # print 'text', text
+    return re.compile(regex).findall(text)
+
+def process_time_contexts(time_contexts):
+    """Process all extracted time contexts
+    Assign one unit for each month
+    """
+
+    total_time = 0
+
+    times = []
+    for time_context in time_contexts:
+        time_values = time_context['time_value']
+        start_month = ''
+        end_month = ''
+        start_date = ''
+        end_date = ''
+
+        print time_values
+        years_present = False
+        for time_value in time_values:
+            for regex in DATE_REGEXES:
+                date = get_match(regex, str(time_value))
+                if len(date):
+                    years_present = True
+                    break
+
+        for time_value in time_values:
+            if 'summer' in time_value:
+                start_month = 'may'
+                end_month = 'july'
+                start_date = datetime.date(2015, 05, 1)
+                end_date = datetime.date(2015, 07, 1)
+                break
+
+            # print time_value
+            date = ''
+            year = ''
+            month = ''
+            for i, regex in enumerate(DATE_REGEXES):
+                date = get_match(regex, str(time_value))
+                if len(date):
+                    if i == 1:
+                        year = date[0][0]
+                        month = date[0][2]
+                    elif i == 0:
+                        year = date[0][2]
+                        month = date[0][0]
+                    break
+
+            if date:
+                # print date, int(month)
+                if not start_date:
+                    start_date = datetime.date(int(year), int(month), 1)
+                elif not end_date:
+                    end_date = datetime.date(int(year), int(month), 1)
+                    break
+            
+            if not years_present:
+                month = get_match(MONTH_REGEX, time_value.lower())
+                if month:
+                    month = month[0][0]
+                    # print 'month: ', month
+                    if not start_month:
+                        start_month = month
+                        start_date = datetime.date(2015, month_str_to_num(month), 1)
+                    elif not end_month:
+                        end_month = month
+                        end_date = datetime.date(2015, month_str_to_num(month), 1)
+                        break
+
+        total_months = []
+        # print start_date, end_date
+        if start_date and end_date:
+            if start_date > end_date:
+                start_date, end_date = end_date, start_date
+            total_months =  year_month_range(start_date, end_date)
+        # print total_months
+        total_months = len(total_months)
+        print 'months: ', total_months
+        total_time += total_months
+
+    print 'total_time: ', total_time
+
+
 def get_time_groups(time_tokens):
     time_groups = []
 
@@ -99,6 +239,7 @@ def main():
     for json_file in os.listdir(jsonpath):
         current = os.path.join(jsonpath, json_file)
         # current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201203005_BhavanaGannu.pdf.html.json'
+        current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/200902041_BinayNeekhra.pdf.html.json'
         print current
 
         if not os.path.isfile(current):
@@ -123,8 +264,9 @@ def main():
             s = filter(lambda x: x in printable, s)
             time_contexts = get_time_context(s, section)
 
-        json.dump(time_contexts, open("./data/time/" + json_file, 'w'))
-        # break
+        process_time_contexts(time_contexts)
+        # json.dump(time_contexts, open("./data/time/" + json_file, 'w'))
+        break
 
 if __name__ == '__main__':
     main()
