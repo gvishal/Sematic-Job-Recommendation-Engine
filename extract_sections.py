@@ -3,6 +3,7 @@ import sys
 import os
 import json
 import string
+from unidecode import unidecode
 
 printable = set(string.printable)
 
@@ -21,11 +22,11 @@ section_names = {
                 'technologies worked with':'skills',
                 'achievements':'achievements',
                 'academic achievements':'achievements',
-				'scholastic achievements':'achievements',	
+                'scholastic achievements':'achievements',   
                 'projects':'projects',
                 'major projects':'projects',
                 'minor projects':'projects',
-				'other projects':'projects',
+                'other projects':'projects',
                 'project and publications':'projects',
                 'publications':'projects',
                 'areas of interest':'interest',
@@ -35,20 +36,20 @@ section_names = {
                 'computer skills':'skills',
                 'personal information':'personal',
                 'personal details':'personal',
-				'relevant courses':'courses',
-				'relevant course work':'courses',
-				'relevant courses undertaken':'courses',
-				'selected coursework':'courses',
-				'research oriented work':'research',
-				'publications':'research',
-				'extra curricular':'interests',
-				'extra-curricular':'interests',
-				'interests':'interests',
-				'other activities':'interests',
-				'notable philanthropic projects':'interests',
-				'other achievements':'interests',
-				'miscellaneous':'interests',
-				'technical and personal skills':'skills'
+                'relevant courses':'courses',
+                'relevant course work':'courses',
+                'relevant courses undertaken':'courses',
+                'selected coursework':'courses',
+                'research oriented work':'research',
+                'publications':'research',
+                'extra curricular':'interests',
+                'extra-curricular':'interests',
+                'interests':'interests',
+                'other activities':'interests',
+                'notable philanthropic projects':'interests',
+                'other achievements':'interests',
+                'miscellaneous':'interests',
+                'technical and personal skills':'skills'
                 }
 
 dump={}
@@ -61,57 +62,79 @@ newdir = path + "/../infoboxes/"
 d = os.path.dirname(newdir)
 
 if not os.path.exists(d):
-	os.makedirs(d)
+    os.makedirs(d)
 
-jsonpath=path+"/../jsons/"	
+jsonpath=path+"/../jsons/"  
 
 j = os.path.dirname(jsonpath)
 
 if not os.path.exists(j):
-	os.makedirs(j)
+    os.makedirs(j)
 
 # go till first section
 
+def replace_chars(line):
+    replacements = {
+        '\xe2\x80\x99': ' ',
+        '\xe2\x80\x93': '-'
+    }
+    for rep in replacements:
+        print rep
+        line.replace(rep, replacements[rep])
+    return line
+
+def remove_non_ascii(text):
+    return unidecode(unicode(text, encoding = "utf-8"))
+
 for file in os.listdir(path):
 
-	current=os.path.join(path,file)
+    current=os.path.join(path,file)
+    # current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/txts/201156221_RadhaManisha.pdf.html'
 
-	if os.path.isfile(current):
-		f=open(current,'rb')
+    if os.path.isfile(current):
+        f=open(current,'rb')
 
-		w=open(d+"/"+str(file),'wb')
-		
-		first=1
-		field=""
+        w=open(d+"/"+str(file),'wb')
+        
+        first=1
+        field=""
 
-		print 'Writing file: ' + newdir+str(file)
+        print 'Writing file: ' + newdir+str(file)
 
-		for line in f:
-		    line = filter(lambda x: x in printable, line)
-		    section = line.lstrip().rstrip().lower().replace(":","").replace(".","") # remove delimeters
+        for line in f:
+            # print line
+            line = remove_non_ascii(line)
+            line = filter(lambda x: x in printable, line)
+            # print line
+            section = line.lstrip().rstrip().lower().replace(":","").replace(".","") # remove delimeters
 
-		    if section in section_names.keys():
-	
-			if first: first=0
-#			elif section_names[section]==field: continue
-			elif section in dump : continue
-			else: dump[field]=data; data="";	
 
-			w.write("========================================\n")
-			w.write("Start of " + section_names[section]+"\n")
-			field=section_names[section]
+            if section in section_names.keys():
+    
+                if first: 
+                    first=0
+    #           elif section_names[section]==field: continue
+                elif section in dump : 
+                    continue
+                else: 
+                    dump[field]=data; data="";    
 
-		    else:
-			w.write(line)
-			data+=line
+                w.write("========================================\n")
+                w.write("Start of " + section_names[section]+"\n")
+                field=section_names[section]
 
-		if field not in dump:
-			dump[field]=data		## last section
+            else:
+                w.write(line)
+                data+=line
 
-		print 'Dumping json: ' + newdir+str(file)+".json\n\n"
+        if field not in dump:
+            dump[field]=data        ## last section
 
-		json.dump(dump, open(j+"/"+str(file)+".json",'wb'))
+        print 'Dumping json: ' + newdir+str(file)+".json\n\n"
 
-		f.close()
-		w.close()
-		dump.clear()
+        json.dump(dump, open(j+"/"+str(file)+".json",'wb'))
+
+        f.close()
+        w.close()
+        dump.clear()
+    # break

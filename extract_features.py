@@ -134,7 +134,8 @@ def month_str_to_num(string):
 
 DATE_REGEXES = [
 '^(1[0-2]|0[1-9]|\d)(\/|-)(20\d{2}|19\d{2}|0(?!0)\d|[1-9]\d)$',#month-year
-'^(20\d{2}|19\d{2}|0(?!0)\d|[1-9]\d)(\/|-)(1[0-2]|0[1-9]|\d)$'#year-month
+'^(20\d{2}|19\d{2}|0(?!0)\d|[1-9]\d)(\/|-)(1[0-2]|0[1-9]|\d)$',#year-month
+'^(XX\d{2})(\/|-)(1[0-2]|0[1-9]|\d)$' #XXYR-month
 ]
 
 YEAR_REGEX = '^(20\d{2}|19\d{2}|0(?!0)\d|[1-9]\d)(\/|-)(20\d{2}|19\d{2}|0(?!0)\d|[1-9]\d)$' #year-year
@@ -149,7 +150,6 @@ def process_time_contexts(time_contexts):
     """Process all extracted time contexts
     Assign one unit for each month
     """
-
     total_time = 0
 
     times = []
@@ -174,8 +174,14 @@ def process_time_contexts(time_contexts):
                 start_month = 'may'
                 end_month = 'july'
                 start_date = datetime.date(2015, 05, 1)
-                end_date = datetime.date(2015, 07, 1)
+                end_date = datetime.date(2015, 8, 1)
                 break
+
+            # 2 years
+            if 'P2Y' in time_value:
+                start_date = datetime.date(2015, 05, 1)
+                end_date = datetime.date(2017, 05, 1)
+                break                
 
             # print time_value
             date = ''
@@ -184,12 +190,15 @@ def process_time_contexts(time_contexts):
             for i, regex in enumerate(DATE_REGEXES):
                 date = get_match(regex, str(time_value))
                 if len(date):
-                    if i == 1:
-                        year = date[0][0]
-                        month = date[0][2]
-                    elif i == 0:
+                    if i == 0:
                         year = date[0][2]
                         month = date[0][0]
+                    elif i == 1:
+                        year = date[0][0]
+                        month = date[0][2]
+                    elif i == 2:
+                        year = '20' + date[0][0][2:]
+                        month = date[0][2]
                     break
 
             if date:
@@ -220,7 +229,7 @@ def process_time_contexts(time_contexts):
                     break
 
         total_months = []
-        # print start_date, end_date
+        # print 'sd: ', start_date, 'ed: ', end_date
         if start_date and end_date:
             if start_date > end_date:
                 start_date, end_date = end_date, start_date
@@ -230,7 +239,13 @@ def process_time_contexts(time_contexts):
         # print 'months: ', total_months
         total_time += total_months
 
-    print 'total_time: ', total_time
+    aux_time = 0
+    if len(time_contexts) and not total_time:
+        aux_time = len(time_contexts)*3
+        print 0
+
+    # print 'total_time: ', total_time
+    return total_time, aux_time
 
 
 def get_time_groups(time_tokens):
@@ -241,13 +256,13 @@ def get_time_groups(time_tokens):
     for time_token in time_tokens:
         pass
 
-def main():
+def write_time_contexts():
     jsonpath = "./data/jsons/"  
 
     for json_file in os.listdir(jsonpath):
         current = os.path.join(jsonpath, json_file)
         # current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201203005_BhavanaGannu.pdf.html.json'
-        current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201201043_RaviTejaGovinduluri.pdf.html.json'
+        # current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201156221_RadhaManisha.pdf.html.json'
         print current
 
         if not os.path.isfile(current):
@@ -273,9 +288,90 @@ def main():
             time_contexts = get_time_context(s, section)
 
         # print time_contexts
-        process_time_contexts(time_contexts)
         json.dump(time_contexts, open("./data/time/" + json_file, 'w'))
-        break
+
+def write_time_context(json_file):
+    jsonpath = "./data/jsons/"  
+
+    current = os.path.join(jsonpath, json_file)
+
+    if not os.path.isfile(current):
+        return
+
+    fp = open(current, 'rb')
+
+    json_content = json.load(fp)
+    time_contexts = []
+
+    if 'sections' in json_content.keys():
+        for section in json_content['sections']:
+            if section not in ['experience']:
+                continue
+            time_contexts = get_time_context(json_content['sections'][section])
+
+    for section in json_content:
+        # print section
+        if section not in ['experience']:
+            continue
+        s = json_content[section]
+        s = filter(lambda x: x in printable, s)
+        time_contexts = get_time_context(s, section)
+
+    # print time_contexts
+    json.dump(time_contexts, open("./data/time/" + json_file, 'w'))
+
+def read_time_contexts():
+    jsonpath = "./data/time/"  
+
+    for json_file in os.listdir(jsonpath):
+        current = os.path.join(jsonpath, json_file)
+        # current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201203005_BhavanaGannu.pdf.html.json'
+        # current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201201043_RaviTejaGovinduluri.pdf.html.json'
+        print current
+
+        if not os.path.isfile(current):
+            continue
+
+        fp = open(current, 'r')
+
+        json_content = json.load(fp)
+        time_contexts = json_content
+
+        # print time_contexts
+        # print 'time_contexts: ', len(time_contexts)
+        process_time_contexts(time_contexts)
+        # json.dump(time_contexts, open("./data/time/" + json_file, 'w'))
+        # break
+
+def read_time_context(json_file):
+    jsonpath = "./data/time/"  
+
+    current = os.path.join(jsonpath, json_file)
+    print current
+
+    if not os.path.isfile(current):
+        return
+
+    fp = open(current, 'r')
+
+    json_content = json.load(fp)
+    time_contexts = json_content
+
+    # print time_contexts
+    # print 'time_contexts: ', len(time_contexts)
+    process_time_contexts(time_contexts)
+    # json.dump(time_contexts, open("./data/time/" + json_file, 'w'))
+    # break 
+
+def main():
+    # write_time_contexts()
+    read_time_contexts()
+    base = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/'
+    end = '201405626_HaseebAhmed.pdf.html.json'
+    current = base + end
+
+    # write_time_context(end)
+    # read_time_context(end)
 
 if __name__ == '__main__':
     main()
