@@ -12,6 +12,7 @@ section_names = {
                 'work experience':'experience',
                 'experience':'experience',
                 'industry experience':'experience',
+                'experience intern': 'experience',
                 'education':'education',
                 'education background':'education',
                 'academics':'education',

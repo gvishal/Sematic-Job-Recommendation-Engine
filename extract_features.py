@@ -242,9 +242,9 @@ def process_time_contexts(time_contexts):
     aux_time = 0
     if len(time_contexts) and not total_time:
         aux_time = len(time_contexts)*3
-        print 0
+        # print 0
 
-    # print 'total_time: ', total_time
+    print 'total_time: ', total_time, aux_time
     return total_time, aux_time
 
 
@@ -363,13 +363,100 @@ def read_time_context(json_file):
     # json.dump(time_contexts, open("./data/time/" + json_file, 'w'))
     # break 
 
+CGPA_REGEXS = [
+'(\d(?:\.\d+)?|10|10.0|10.00)(?:\/(?:10(?:\.\d+)?))',
+'(\d(?:\.\d+)?|10|10.0|10.00)'
+]
+
+def get_cgpa_occ(s):
+    regex1 = []
+    regex2 = []
+
+    regex1 = get_match(CGPA_REGEXS[0], s)
+    if not len(regex1):
+        new_s = s.lower().find('cgpa')
+        if new_s == -1:
+            new_s = s.lower().find('gpa')
+
+        if new_s == -1:
+            return ''
+
+        s_new = s[new_s:new_s + 20]
+
+        regex2 = get_match(CGPA_REGEXS[1], s_new)
+
+        if not regex2:
+            s_new = s[new_s:new_s + 80]
+
+            regex2 = get_match(CGPA_REGEXS[1], s_new)
+
+    cgpas = regex1 + regex2
+    print regex1, regex2
+    return cgpas
+
+def get_cgpa(file_path):
+    if not os.path.isfile(file_path):
+        return
+
+    fp = open(file_path, 'r')
+
+    json_content = json.load(fp)
+
+    cgpas = []
+    if 'sections' in json_content.keys():
+        for section in json_content['sections']:
+            if section not in ['education']:
+                continue
+            s = json_content['sections'][section]
+            cgpas = get_cgpa_occ(s)
+
+    for section in json_content:
+        # print section
+        if section not in ['education']:
+            continue
+        s = json_content[section]
+        s = filter(lambda x: x in printable, s)
+
+        cgpas = get_cgpa_occ(s)
+
+    print cgpas
+    new_cgpas = []
+    for cgpa in cgpas:
+        # print cgpa
+        if len(cgpa):
+            new_cgpas.append(float(cgpa[0]))
+
+    print new_cgpas
+    return new_cgpas
+
+def iterate_over_files():
+    jsonpath = "./data/jsons/"  
+
+    for json_file in os.listdir(jsonpath):
+        current = os.path.join(jsonpath, json_file)
+        # current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201203005_BhavanaGannu.pdf.html.json'
+        # current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201201043_RaviTejaGovinduluri.pdf.html.json'
+        print current
+
+        # if not os.path.isfile(current):
+        #     continue
+
+        # fp = open(current, 'r')
+
+        get_cgpa(current)
+
 def main():
     # write_time_contexts()
-    read_time_contexts()
+    # read_time_contexts()
+
     base = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/'
     end = '201405626_HaseebAhmed.pdf.html.json'
     current = base + end
 
+    current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201002140_ChanakyaAalla.pdf.html.json'
+
+    get_cgpa(current)
+    iterate_over_files()
     # write_time_context(end)
     # read_time_context(end)
 
