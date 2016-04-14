@@ -79,7 +79,7 @@ def get_time_context(text, section):
                 ignore = True
 
         if time_token_present:
-            time_contexts.append({'time_value': time_value,
+            time_contexts.append({'time_value': list(time_value),
                                     'content': content, 'aux_content': []})
         elif not ignore:
             n = len(time_contexts)
@@ -137,6 +137,8 @@ DATE_REGEXES = [
 '^(20\d{2}|19\d{2}|0(?!0)\d|[1-9]\d)(\/|-)(1[0-2]|0[1-9]|\d)$'#year-month
 ]
 
+YEAR_REGEX = '^(20\d{2}|19\d{2}|0(?!0)\d|[1-9]\d)(\/|-)(20\d{2}|19\d{2}|0(?!0)\d|[1-9]\d)$' #year-year
+
 MONTH_REGEX = '(jan(?:uary)?|feb(?:ruary)?|mar(?:ch)?|apr(?:il)?|may|jun(?:e)?|jul(?:y)?|aug(?:ust)?|sep(?:tember)?|oct(?:ober)?|(nov|dec)(?:ember)?)'
 
 def get_match(regex, text):
@@ -158,7 +160,7 @@ def process_time_contexts(time_contexts):
         start_date = ''
         end_date = ''
 
-        print time_values
+        # print time_values
         years_present = False
         for time_value in time_values:
             for regex in DATE_REGEXES:
@@ -200,7 +202,7 @@ def process_time_contexts(time_contexts):
             
             if not years_present:
                 month = get_match(MONTH_REGEX, time_value.lower())
-                if month:
+                if len(month):
                     month = month[0][0]
                     # print 'month: ', month
                     if not start_month:
@@ -211,6 +213,12 @@ def process_time_contexts(time_contexts):
                         end_date = datetime.date(2015, month_str_to_num(month), 1)
                         break
 
+                year = get_match(YEAR_REGEX, time_value)
+                if len(year):
+                    start_date = datetime.date(2015, 01, 1)
+                    end_date = datetime.date(2016, 01, 1)
+                    break
+
         total_months = []
         # print start_date, end_date
         if start_date and end_date:
@@ -219,7 +227,7 @@ def process_time_contexts(time_contexts):
             total_months =  year_month_range(start_date, end_date)
         # print total_months
         total_months = len(total_months)
-        print 'months: ', total_months
+        # print 'months: ', total_months
         total_time += total_months
 
     print 'total_time: ', total_time
@@ -239,7 +247,7 @@ def main():
     for json_file in os.listdir(jsonpath):
         current = os.path.join(jsonpath, json_file)
         # current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201203005_BhavanaGannu.pdf.html.json'
-        current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/200902041_BinayNeekhra.pdf.html.json'
+        current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201201043_RaviTejaGovinduluri.pdf.html.json'
         print current
 
         if not os.path.isfile(current):
@@ -264,8 +272,9 @@ def main():
             s = filter(lambda x: x in printable, s)
             time_contexts = get_time_context(s, section)
 
+        # print time_contexts
         process_time_contexts(time_contexts)
-        # json.dump(time_contexts, open("./data/time/" + json_file, 'w'))
+        json.dump(time_contexts, open("./data/time/" + json_file, 'w'))
         break
 
 if __name__ == '__main__':

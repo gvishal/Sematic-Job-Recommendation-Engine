@@ -2,6 +2,9 @@
 import sys
 import os
 import json
+import string
+
+printable = set(string.printable)
 
 section_names = {
                 'professional experience':'experience',
@@ -84,6 +87,7 @@ for file in os.listdir(path):
 		print 'Writing file: ' + newdir+str(file)
 
 		for line in f:
+		    line = filter(lambda x: x in printable, line)
 		    section = line.lstrip().rstrip().lower().replace(":","").replace(".","") # remove delimeters
 
 		    if section in section_names.keys():
