@@ -2,6 +2,7 @@
 
 // hide initial
 $("#searching").hide();
+$("#searched").hide();
 $("#results-table").hide();
 $("#error").hide();
 
@@ -22,7 +23,7 @@ $(function() {
       i++;
     }
 
-    if(e.keyCode != 13 && i%4){
+    if(e.keyCode != 13 && i%4 && e.keyCode != 32){
       return
     }
     i++;
@@ -46,6 +47,7 @@ $(function() {
     console.log(image)
 
     // show searching text
+    $("#searched").hide();
     $("#searching").show();
     console.log("searching...")
 
@@ -64,6 +66,8 @@ $(function() {
         for (i = 0; i < data.length; i++) {
           $("#results").append('<tr><th>' + data[i]["candidate"] + '</th><th>'+data[i]['cosine']+'</th></tr>')
         };
+        
+        setTimeout(function(){ $("#searching").hide();$("#searched").show(); }, 1500);
       },
       // handle error
       error: function(error) {
