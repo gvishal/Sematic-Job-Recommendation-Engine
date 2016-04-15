@@ -30,6 +30,7 @@ def search():
 
         # get url
         image_url = request.form.get('img')
+        print image_url
 
         try:
 
@@ -63,4 +64,4 @@ def search():
 
 # run!
 if __name__ == '__main__':
-    app.run('0.0.0.0', debug=True)
+    app.run('0.0.0.0', debug=True, threaded=True)

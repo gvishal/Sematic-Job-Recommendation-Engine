@@ -37,10 +37,10 @@ $(function() {
     $("#error").hide();
 
     // remove active class
-    $(".query1").removeClass("active")
+    // $(".query1").removeClass("active")
 
     // add active class to clicked picture
-    $(this).addClass("active")
+    // $(this).addClass("active")
 
     // grab image url
     var image = $(this).val()
