@@ -241,7 +241,7 @@ def process_time_contexts(time_contexts):
 
     aux_time = 0
     if len(time_contexts) and not total_time:
-        aux_time = len(time_contexts)*3
+        aux_time = len(time_contexts)*2
         # print 0
 
     print 'total_time: ', total_time, aux_time
@@ -468,6 +468,8 @@ def iterate_over_files():
         cgpa = get_cgpa(json_file)
         if len(cgpa):
             cgpa = cgpa[0]
+        else:
+            cgpa = 0
 
         print direct_months, aux_months, cgpa
 
