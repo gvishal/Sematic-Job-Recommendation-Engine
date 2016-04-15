@@ -337,29 +337,29 @@ def read_time_contexts():
         json_content = json.load(fp)
         time_contexts = json_content
 
-        # print time_contexts
+        print time_contexts
         # print 'time_contexts: ', len(time_contexts)
         process_time_contexts(time_contexts)
         # json.dump(time_contexts, open("./data/time/" + json_file, 'w'))
         # break
 
 def read_time_context(json_file):
-    jsonpath = "./data/time/"  
+    # jsonpath = "./data/time/"  
 
-    current = os.path.join(jsonpath, json_file)
-    print current
+    # current = os.path.join(jsonpath, json_file)
+    # print current
 
-    if not os.path.isfile(current):
-        return
+    # if not os.path.isfile(current):
+    #     return
 
-    fp = open(current, 'r')
+    fp = open(json_file, 'r')
 
     json_content = json.load(fp)
     time_contexts = json_content
 
     # print time_contexts
     # print 'time_contexts: ', len(time_contexts)
-    process_time_contexts(time_contexts)
+    return process_time_contexts(time_contexts)
     # json.dump(time_contexts, open("./data/time/" + json_file, 'w'))
     # break 
 
@@ -424,26 +424,57 @@ def get_cgpa(file_path):
     for cgpa in cgpas:
         # print cgpa
         if len(cgpa):
-            new_cgpas.append(float(cgpa[0]))
+            if float(cgpa[0]) > 5:
+                new_cgpas.append(float(cgpa[0]))
 
     print new_cgpas
     return new_cgpas
 
+def write_to_file(json_file, data = {}):
+    fp = open(json_file, 'r')
+
+    json_content = json.load(fp)
+
+    fp.close()
+
+    json_content.update(data)
+    # print json_content
+
+    fp = open(json_file, 'w')
+    json.dump(json_content, fp)
+    fp.close()
+
 def iterate_over_files():
-    jsonpath = "./data/jsons/"  
+    jsonpath = "./data/jsons/"
+    timepath = "./data/time/"
 
-    for json_file in os.listdir(jsonpath):
-        current = os.path.join(jsonpath, json_file)
-        # current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201203005_BhavanaGannu.pdf.html.json'
-        # current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201201043_RaviTejaGovinduluri.pdf.html.json'
-        print current
+    for file_name in os.listdir(jsonpath):
+        # print file_name
+        json_file = os.path.join(jsonpath, file_name)
+        time_file = os.path.join(timepath, file_name)
+        # json_file = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201203005_BhavanaGannu.pdf.html.json'
+        # json_file = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201201043_RaviTejaGovinduluri.pdf.html.json'
+        print json_file
+        print time_file
 
-        # if not os.path.isfile(current):
-        #     continue
+        if not os.path.isfile(json_file):
+            continue
 
-        # fp = open(current, 'r')
+        if not os.path.isfile(time_file):
+            continue
 
-        get_cgpa(current)
+        # print 'here'
+        direct_months, aux_months = read_time_context(time_file)
+        cgpa = get_cgpa(json_file)
+        if len(cgpa):
+            cgpa = cgpa[0]
+
+        print direct_months, aux_months, cgpa
+
+        data = {"time": {"direct": direct_months, "aux": aux_months},
+                "cgpa": cgpa}
+
+        write_to_file(json_file, data)
 
 def main():
     # write_time_contexts()
@@ -455,7 +486,7 @@ def main():
 
     current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201002140_ChanakyaAalla.pdf.html.json'
 
-    get_cgpa(current)
+    # get_cgpa(current)
     iterate_over_files()
     # write_time_context(end)
     # read_time_context(end)
