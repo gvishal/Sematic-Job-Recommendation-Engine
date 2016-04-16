@@ -51,7 +51,7 @@ def search():
                 # RESULTS_ARRAY.append(
                 #     {"image": str(resultID), "score": str(score)})
             RESULTS_ARRAY = generic_search.get_results(image_url)     
-            print RESULTS_ARRAY     
+            # print RESULTS_ARRAY     
 
             # return success
             return jsonify(results=RESULTS_ARRAY)

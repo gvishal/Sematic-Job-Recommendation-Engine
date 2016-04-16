@@ -20,15 +20,18 @@ with open('stopwords.txt', 'r') as f:
     line = line.strip()
     stopwords.add(line)
 
-fs = FrequencySummarizer()
 
 def get_summary(title, text):
-    print '----------------------------------'
-    print title
+    fs = FrequencySummarizer()
+    # print '----------------------------------'
+    # print title
 
     summary = []
-    for s in fs.summarize(text, 2):
-        summary.append(s)
+    try:
+        for s in fs.summarize(text, 2):
+            summary.append(s)
+    except:
+        pass
         # print '*',s
     return summary
 
@@ -39,7 +42,8 @@ def write_to_file(json_file, data = {}):
 
     fp.close()
 
-    json_content.update(data)
+    for section in data:
+        json_content[section] = data[section]
     # print json_content
 
     fp = open(json_file, 'w')
@@ -58,8 +62,7 @@ def iterate_over_files():
     for file_name in os.listdir(jsonpath):
         # print file_name
         json_file = os.path.join(jsonpath, file_name)
-        # json_file = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201203005_BhavanaGannu.pdf.html.json'
-        # json_file = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/jsons/201201043_RaviTejaGovinduluri.pdf.html.json'
+
         print json_file
         # print time_file
 
@@ -71,10 +74,14 @@ def iterate_over_files():
 
         text = ''
         for section in json_content:
+            if section in ['summary', 'cgpa', 'time']:
+                continue
             # print json_content[section]
             text += str(json_content[section])
 
+        # print text
         summary = get_summary(file_name, text)
+        # print summary
         # clean_summary(summary)
 
         # break

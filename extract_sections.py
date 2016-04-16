@@ -105,7 +105,7 @@ for file in os.listdir(path):
 
     current=os.path.join(path,file)
     # current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/txts/201156221_RadhaManisha.pdf.html'
-    current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/txts/201405626_HaseebAhmed.pdf.html'
+    # current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/txts/201405626_HaseebAhmed.pdf.html'
     if os.path.isfile(current):
         f=open(current,'rb')
 

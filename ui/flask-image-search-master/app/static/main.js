@@ -64,7 +64,9 @@ $(function() {
         $("#results-table").show();
         // loop through results, append to dom
         for (i = 0; i < data.length; i++) {
-          $("#results").append('<tr><th>' + data[i]["candidate"] + '</th><th>'+data[i]['cosine']+'</th></tr>')
+          var summary = data[i].summary[0];
+          var cgpa = data[i].cgpa ? data[i].cgpa > 5 : 7.2;
+          $("#results").append('<tr><th><span title=' + summary + 'cgpa: ' + cgpa  + '> ' + data[i]["candidate"] + '</span></th><th>'+data[i]['cosine']+'</th></tr>')
         };
         
         setTimeout(function(){ $("#searching").hide();$("#searched").show(); }, 1500);
