@@ -87,11 +87,25 @@ def replace_chars(line):
 def remove_non_ascii(text):
     return unidecode(unicode(text, encoding = "utf-8"))
 
+def write_to_file(json_file, data = {}):
+    fp = open(json_file, 'r')
+
+    json_content = json.load(fp)
+
+    fp.close()
+
+    json_content.update(data)
+    # print json_content
+
+    fp = open(json_file, 'w')
+    json.dump(json_content, fp)
+    fp.close()
+
 for file in os.listdir(path):
 
     current=os.path.join(path,file)
     # current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/txts/201156221_RadhaManisha.pdf.html'
-
+    current = '/home/vg/work/IIITH/Sematic-Job-Recommendation-Engine/data/txts/201405626_HaseebAhmed.pdf.html'
     if os.path.isfile(current):
         f=open(current,'rb')
 
@@ -106,8 +120,18 @@ for file in os.listdir(path):
             # print line
             line = remove_non_ascii(line)
             line = filter(lambda x: x in printable, line)
+            line = line.strip()
+            
+            line = ' '.join([s for s in line.split(' ')])
+
+            # line = "".join([s for s in line.strip().splitlines(True) if s.strip("\r\n").strip()])
+
+            if not line or line.isspace():
+                continue
+                
             # print line
-            section = line.lstrip().rstrip().lower().replace(":","").replace(".","") # remove delimeters
+
+            section = line.lower().replace(":","").replace(".","") # remove delimeters
 
 
             if section in section_names.keys():
@@ -133,7 +157,8 @@ for file in os.listdir(path):
 
         print 'Dumping json: ' + newdir+str(file)+".json\n\n"
 
-        json.dump(dump, open(j+"/"+str(file)+".json",'wb'))
+        write_to_file(j+"/"+str(file)+".json", dump)
+        # json.dump(dump, open(j+"/"+str(file)+".json",'wb'))
 
         f.close()
         w.close()
